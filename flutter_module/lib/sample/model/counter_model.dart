@@ -23,8 +23,7 @@ class CounterModel extends ChangeNotifier {
 
   void increment() {
     _channel.invokeMethod<void>('incrementCounter');
-    int? aa;
-    developer.log("${aa!}");
+    throw "aa";
   }
 
   Future<dynamic> _handleMessage(MethodCall call) async {

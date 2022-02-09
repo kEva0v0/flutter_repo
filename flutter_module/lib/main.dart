@@ -6,7 +6,6 @@ import 'dart:async';
 import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_module/sample/model/counter_model.dart';
 import 'package:flutter_module/sample/widget/home.dart';
 import 'package:provider/provider.dart';
@@ -20,14 +19,18 @@ void main() {
   final model = CounterModel();
 
   getError();
-
   runZoned(
-    () => runApp(
-      ChangeNotifierProvider.value(
-        value: model,
-        child: const MyApp(),
-      ),
-    ),
+    () {
+      runApp(
+        ChangeNotifierProvider.value(
+          value: model,
+          child: const MyApp(),
+        ),
+      );
+    },
+    onError: (Object obj,StackTrace stack) {
+      developer.log("stackTrace ${stack}");
+    },
     zoneSpecification: ZoneSpecification(
       print: (self, parent, zone, line){
         developer.log("Interceptor $line");
@@ -35,14 +38,22 @@ void main() {
       handleUncaughtError: (self, parent, zone, error, stackTrace){
         developer.log("stackTrace $stackTrace");
       }
-    )
+    ),
   );
+}
+
+void visitElement(Element element) {
+  developer.log("Element ${element.widget.toString()} dirty:${element.dirty}");
+  element.visitChildren((element2) {
+    visitElement(element2);
+  });
 }
 
 void getError() {
   FlutterError.onError = (details){
     FlutterError.dumpErrorToConsole(details);
     developer.log("stackTrace ${details.stack}");
+    WidgetsBinding.instance?.renderViewElement?.visitChildren(visitElement);
     var rendererView = RendererBinding.instance?.renderView;
     debugDumpLayerTree();
     debugDumpRenderTree();
